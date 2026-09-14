@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Colorful You · 妆容适配 Demo</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <div>
+        <span class="eyebrow">COLORFUL YOU · MVP DEMO</span>
+        <h1>先看效果，再决定要不要化。</h1>
+        <p>上传一张正脸照片，选择妆容，即时查看妆前 / 妆后对比。</p>
+      </div>
+      <div class="stepper" aria-label="演示流程">
+        <span class="active">1 上传照片</span><i></i><span>2 选择妆容</span><i></i><span>3 对比效果</span>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="panel control-panel">
+        <section>
+          <div class="section-title"><span>01</span><div><h2>上传照片</h2><p>建议使用光线均匀、无遮挡的正脸照</p></div></div>
+          <label class="upload-box" for="photoInput">
+            <input id="photoInput" type="file" accept="image/*" />
+            <strong>选择照片</strong>
+            <span>JPG / PNG · 图片仅在浏览器本地处理</span>
+          </label>
+          <button id="demoPhotoButton" class="ghost-button" type="button">使用内置示例图</button>
+        </section>
+
+        <section>
+          <div class="section-title"><span>02</span><div><h2>选择妆容</h2><p>点击任意风格即可实时切换</p></div></div>
+          <div id="makeupOptions" class="makeup-grid" role="listbox" aria-label="妆容风格"></div>
+        </section>
+
+        <section>
+          <div class="section-title compact"><span>03</span><div><h2>调整强度</h2></div></div>
+          <label class="range-row"><span>自然</span><input id="makeupIntensity" type="range" min="20" max="100" value="60" /><span>明显</span></label>
+          <button id="resetButton" class="text-button" type="button">恢复默认</button>
+        </section>
+      </aside>
+
+      <section class="preview-panel panel">
+        <div class="preview-head">
+          <div><span class="status-dot"></span><strong id="statusText">等待上传照片</strong></div>
+          <span id="selectedLookBadge" class="badge">清透玫瑰</span>
+        </div>
+
+        <div id="compareStage" class="compare-stage empty">
+          <canvas id="beforeCanvas"></canvas>
+          <div id="afterLayer" class="after-layer"><canvas id="afterCanvas"></canvas></div>
+          <div id="compareDivider" class="compare-divider"><span>↔</span></div>
+          <input id="compareSlider" class="compare-slider" type="range" min="0" max="100" value="50" aria-label="拖动查看妆前妆后" />
+          <div class="compare-label before-label">妆前</div>
+          <div class="compare-label after-label">妆后</div>
+          <div id="emptyState" class="empty-state">
+            <div class="face-placeholder">✦</div>
+            <h3>从一张照片开始</h3>
+            <p>上传后将自动定位面部，并叠加眼妆、腮红与唇色。</p>
+          </div>
+        </div>
+
+        <div class="preview-actions">
+          <div class="tip"><strong>演示提示</strong><span>拖动中间分割线，直观看妆前 / 妆后差异。</span></div>
+          <button id="downloadButton" type="button" disabled>导出妆后图</button>
+        </div>
+      </section>
+
+      <aside class="panel info-panel">
+        <div class="result-card">
+          <span class="mini-label">CURRENT LOOK</span>
+          <h2 id="lookName">清透玫瑰</h2>
+          <p id="lookNote">低饱和通勤 · 清透自然</p>
+          <div class="color-row"><span id="eyeColor"></span><span id="blushColor"></span><span id="lipColor"></span></div>
+        </div>
+        <div class="feature-list">
+          <h3>Demo 已实现</h3>
+          <div><b>✓</b><span>本地照片上传与预览</span></div>
+          <div><b>✓</b><span>4 种妆容一键切换</span></div>
+          <div><b>✓</b><span>人脸关键点驱动妆效叠加</span></div>
+          <div><b>✓</b><span>妆前 / 妆后滑杆对比</span></div>
+          <div><b>✓</b><span>妆后效果导出</span></div>
+        </div>
+        <div class="privacy-note"><strong>隐私优先</strong><p>当前 Demo 不上传用户照片到服务器，图像处理在浏览器端完成。</p></div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="./src/catalog.js"></script>
+  <script src="./src/app.js"></script>
+</body>
+</html>
