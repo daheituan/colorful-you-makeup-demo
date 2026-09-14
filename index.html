@@ -37,7 +37,24 @@
         </section>
 
         <section>
-          <div class="section-title compact"><span>03</span><div><h2>调整强度</h2></div></div>
+          <div class="section-title"><span>03</span><div><h2>Makeup Agent</h2><p>告诉 AI 场景或你想调整的细节</p></div></div>
+          <form id="agentForm" class="agent-box">
+            <textarea id="agentInput" rows="3" placeholder="例如：明天面试，希望自然一点；或：口红再淡一点"></textarea>
+            <div class="agent-chips">
+              <button type="button" data-prompt="明天面试，希望自然、精神一点">面试自然</button>
+              <button type="button" data-prompt="今晚约会，想要冷调氛围感">约会冷调</button>
+              <button type="button" data-prompt="口红再淡一点，腮红也弱一点">局部调整</button>
+            </div>
+            <button id="agentSubmit" class="agent-submit" type="submit">让 Agent 帮我试妆</button>
+          </form>
+          <div id="agentReply" class="agent-reply" aria-live="polite">
+            <span class="agent-avatar">AI</span>
+            <p>我会把你的自然语言需求转换成妆容风格、整体强度和局部参数，并直接应用到预览。</p>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-title compact"><span>04</span><div><h2>手动调整强度</h2></div></div>
           <label class="range-row"><span>自然</span><input id="makeupIntensity" type="range" min="20" max="100" value="60" /><span>明显</span></label>
           <button id="resetButton" class="text-button" type="button">恢复默认</button>
         </section>
@@ -83,6 +100,7 @@
           <div><b>✓</b><span>人脸关键点驱动妆效叠加</span></div>
           <div><b>✓</b><span>妆前 / 妆后滑杆对比</span></div>
           <div><b>✓</b><span>妆后效果导出</span></div>
+          <div><b>✓</b><span>Makeup Agent 场景推荐与多轮调整</span></div>
         </div>
         <div class="privacy-note"><strong>隐私优先</strong><p>当前 Demo 不上传用户照片到服务器，图像处理在浏览器端完成。</p></div>
       </aside>
@@ -91,6 +109,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="./src/catalog.js"></script>
+  <script src="./src/agent.js"></script>
   <script src="./src/app.js"></script>
 </body>
 </html>
