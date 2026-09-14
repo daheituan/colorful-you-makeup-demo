@@ -1,71 +1,144 @@
-# Colorful You — 妆容适配 Demo
+# Colorful You — Makeup Agent Virtual Try-on Demo
 
-一个面向“用户难以判断妆容是否适合自己”问题的 Web MVP。当前版本聚焦最小可演示闭环：**上传照片 → 选择妆容 → 查看妆前/妆后对比 → 导出结果**。
+针对“用户难以判断妆容是否适合自己”的 Web MVP。当前版本已经形成完整演示闭环：
 
-## 运行方法
+**上传照片 → 用自然语言描述场景/偏好 → Makeup Agent 决策 → 自动应用妆容 → 多轮局部调整 → 妆前/妆后对比 → 导出结果**
 
-项目不需要安装 npm 依赖，使用任意静态文件服务器即可。
+## 1. 最快运行
 
-### 方法 1：Python
+无需安装 npm 依赖，Node.js 18+ 即可：
 
 ```bash
-python3 -m http.server 5173
+cd "coloful you"
+node backend/server.js
 ```
 
-浏览器打开：`http://localhost:5173`
+浏览器打开：`http://localhost:8787`
 
-### 方法 2：VS Code Live Server
+此时即使没有 API Key，Makeup Agent 也会自动使用本地规则 fallback，因此 Demo 可以完整运行。
 
-直接用 Live Server 打开 `index.html`。
+## 2. 启用 OpenAI Makeup Agent
 
-> 人脸关键点识别使用 MediaPipe FaceMesh CDN，需要联网加载；如果识别库加载失败，Demo 会自动退化到基础位置估算，仍可完成整条演示流程。
+推荐通过环境变量提供 API Key，不要把 Key 写进前端或提交到 GitHub。
 
-## 已实现功能
+macOS / Linux：
 
-- 本地上传 JPG / PNG 照片；照片不上传后端。
+```bash
+export OPENAI_API_KEY="你的 API Key"
+export OPENAI_MODEL="gpt-5.6-luna"
+node backend/server.js
+```
+
+Windows PowerShell：
+
+```powershell
+$env:OPENAI_API_KEY="你的 API Key"
+$env:OPENAI_MODEL="gpt-5.6-luna"
+node backend/server.js
+```
+
+也可以参考 `.env.example`。当前项目不自动读取 `.env`，避免增加依赖；如果需要，可自行用 dotenv 或部署平台的 Secret/Environment Variables 配置。
+
+启动后访问 `http://localhost:8787/api/health`：
+
+- `makeupAgent: "openai"`：正在使用 OpenAI Agent。
+- `makeupAgent: "local-fallback"`：未配置 Key，前端会自动回退到本地 Agent。
+
+## 3. Makeup Agent 已实现什么
+
+Agent 不负责评价用户“好不好看”，而是把用户的**场景和偏好**转换成现有虚拟试妆引擎可以执行的参数：
+
+```json
+{
+  "lookId": "clean-rose",
+  "intensity": 0.5,
+  "effects": {
+    "eye": 1.0,
+    "blush": 0.85,
+    "lip": 0.7
+  },
+  "reply": "选择清透玫瑰并降低唇色与腮红，更适合自然正式的面试场景。"
+}
+```
+
+支持两类交互：
+
+- 场景推荐：`明天面试，希望自然、精神一点`、`今晚约会，想要冷调氛围感`。
+- 多轮调整：第一次生成后继续说 `口红再淡一点`、`腮红不要这么明显`、`整体再浓一点`。
+
+前端会保留当前妆容状态，局部调整只改变对应参数。
+
+## 4. 其他已实现功能
+
+- 本地上传 JPG / PNG，照片不上传 OpenAI API；API 只接收文字需求和当前妆容参数。
 - 内置示例图，一键进入演示流程。
-- 4 种妆容风格：清透玫瑰、拿铁柔雾、冷调梅子、蜜桃元气。
-- 基于 MediaPipe FaceMesh 的眼部、双颊、唇部关键点定位。
-- 眼影、腮红、唇色的 Canvas 叠加与强度调节。
-- 人脸识别失败时的基础位置估算降级方案。
-- 妆前 / 妆后可拖动分割线对比。
-- 妆后图片 PNG 导出。
-- 响应式页面，可用于桌面端答辩展示。
+- 4 种妆容：清透玫瑰、拿铁柔雾、冷调梅子、蜜桃元气。
+- MediaPipe FaceMesh 眼部、双颊、唇部关键点定位。
+- FaceMesh 失败时使用基础位置估算降级。
+- Canvas 眼影、腮红、唇色叠加。
+- 整体强度 + Agent 控制的局部强度。
+- 妆前 / 妆后拖动分割线。
+- PNG 结果导出。
+- OpenAI Agent 失败/未配置时自动本地 fallback。
 
-## 尚未完成
-
-- 当前妆效是 2D Canvas 视觉模拟，并非真实物理材质或生成式高保真试妆。
-- 未做肤色、脸型、五官特征分析，因此妆容推荐仍是固定预设，而非个性化推荐。
-- 未加入粉底、眉妆、修容、高光等更细的妆容区域。
-- 没有账号体系、收藏、历史记录和云端同步。
-- 原项目中的推荐内容/爬虫后端暂未接入这个 MVP 主流程。
-- 尚未针对不同光照、侧脸、遮挡和多人照片做稳定性优化。
-
-## 项目结构
+## 5. 项目结构
 
 ```text
-├── index.html              # Demo 主页面
-├── styles.css              # 页面与响应式样式
+coloful you/
+├── index.html
+├── styles.css
+├── .env.example
+├── .gitignore
 ├── src/
-│   ├── app.js              # 上传、FaceMesh、妆效、对比、导出核心逻辑
-│   └── catalog.js          # 妆容预设数据
-├── backend/                # 原型后端与授权来源适配器（当前 Demo 非必需）
+│   ├── app.js          # 图片、FaceMesh、Canvas、状态与 UI
+│   ├── agent.js        # Agent 客户端 + 本地 fallback
+│   └── catalog.js      # 妆容预设
+├── backend/
+│   └── server.js       # 静态服务 + /api/agent OpenAI 代理
 ├── docs/
 │   ├── learn-colorful-you.md
-│   └── my-module.md        # 独立负责模块说明
+│   └── my-module.md
 └── demo/
     └── colorful-you-demo.mp4
 ```
 
-## Demo 演示建议（约 30 秒）
+## 6. Agent 架构
 
-1. 打开首页，说明目标是降低用户“妆前无法判断适配效果”的决策成本。
-2. 点击“使用内置示例图”或上传一张正脸照。
-3. 切换 2–3 种妆容，展示色彩差异。
-4. 调整妆容强度。
-5. 拖动中间分割线，展示妆前 / 妆后对比。
-6. 点击“导出妆后图”，说明当前 MVP 已跑通完整闭环。
+```text
+User natural language
+       ↓
+Makeup Agent
+       ↓
+{ lookId, intensity, eye, blush, lip }
+       ↓
+Virtual Makeup Engine (Canvas + FaceMesh)
+       ↓
+Before / After Preview
+       ↓
+User feedback → next Agent turn
+```
 
-## 项目仓库
+为了避免在浏览器暴露 API Key，OpenAI 请求统一通过 `backend/server.js` 的 `/api/agent` 转发。
 
-GitHub：<https://github.com/daheituan/colorful-you-makeup-demo>
+## 7. Demo 演示建议（45–60 秒）
+
+1. 点击“使用内置示例图”。
+2. 在 Makeup Agent 输入：`明天面试，希望自然、精神一点`。
+3. 展示 Agent 自动切换妆容并调整强度。
+4. 再输入：`口红再淡一点，腮红也弱一点`。
+5. 强调第二轮只修改局部参数，体现 Agent 的状态与决策。
+6. 拖动妆前/妆后分割线。
+7. 点击导出结果。
+8. 说明 API 不可用时有本地 fallback，答辩演示不会中断。
+
+## 8. 尚未完成
+
+- 当前妆效是 2D Canvas 模拟，不是生成式高保真材质迁移。
+- Agent 当前使用文字场景和用户偏好，不读取用户照片内容做视觉分析。
+- 未加入粉底、眉妆、修容、高光等更细参数。
+- 未做账号、收藏、历史记录和云同步。
+- 未部署生产后端；正式部署时需要把 `OPENAI_API_KEY` 放在平台 Secret 中。
+
+## 9. 隐私说明
+
+照片始终在浏览器端用于 FaceMesh / Canvas 处理。当前 `/api/agent` 只会发送用户输入的文字和妆容参数，不会发送照片。
