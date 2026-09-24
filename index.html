@@ -3,107 +3,93 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Colorful You · 妆容适配 Demo</title>
+  <title>Colorful You · AI Real-time Makeup Coach</title>
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./agent.css" />
 </head>
 <body>
   <main class="page-shell">
     <header class="hero">
       <div>
-        <span class="eyebrow">COLORFUL YOU · MVP DEMO</span>
-        <h1>先看效果，再决定要不要化。</h1>
-        <p>上传一张正脸照片，选择妆容，即时查看妆前 / 妆后对比。</p>
+        <span class="eyebrow">COLORFUL YOU · REAL-TIME COACH V2</span>
+        <h1>AI 不只替你试妆，也教你把它画出来。</h1>
+        <p>实时半脸示范 · 分步骤跟妆 · Makeup Agent 场景推荐 · 本地视觉分析</p>
       </div>
-      <div class="stepper" aria-label="演示流程">
-        <span class="active">1 上传照片</span><i></i><span>2 选择妆容</span><i></i><span>3 对比效果</span>
-      </div>
+      <div class="hero-badge">Mirror Makeup Mode</div>
     </header>
 
     <section class="workspace">
       <aside class="panel control-panel">
         <section>
-          <div class="section-title"><span>01</span><div><h2>上传照片</h2><p>建议使用光线均匀、无遮挡的正脸照</p></div></div>
-          <label class="upload-box" for="photoInput">
+          <div class="section-title"><span>01</span><div><h2>选择输入</h2><p>推荐使用摄像头进行实时跟妆</p></div></div>
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="camera">实时摄像头</button>
+            <button class="mode-tab" data-mode="photo">照片备用</button>
+          </div>
+          <button id="startCameraButton" class="primary-button" type="button">开启摄像头</button>
+          <label class="upload-box hidden" id="uploadBox" for="photoInput">
             <input id="photoInput" type="file" accept="image/*" />
-            <strong>选择照片</strong>
-            <span>JPG / PNG · 图片仅在浏览器本地处理</span>
+            <strong>选择正脸照片</strong><span>JPG / PNG，仅浏览器本地处理</span>
           </label>
-          <button id="demoPhotoButton" class="ghost-button" type="button">使用内置示例图</button>
+          <button id="demoPhotoButton" class="ghost-button hidden" type="button">使用内置示例图</button>
         </section>
 
         <section>
-          <div class="section-title"><span>02</span><div><h2>选择妆容</h2><p>点击任意风格即可实时切换</p></div></div>
-          <div id="makeupOptions" class="makeup-grid" role="listbox" aria-label="妆容风格"></div>
-        </section>
-
-        <section>
-          <div class="section-title"><span>03</span><div><h2>Makeup Agent</h2><p>告诉 AI 场景或你想调整的细节</p></div></div>
+          <div class="section-title"><span>02</span><div><h2>Makeup Agent</h2><p>描述场景，让 Agent 生成可执行妆容计划</p></div></div>
           <form id="agentForm" class="agent-box">
-            <textarea id="agentInput" rows="3" placeholder="例如：明天面试，希望自然一点；或：口红再淡一点"></textarea>
+            <textarea id="agentInput" rows="3" placeholder="例如：明天面试，希望自然、精神一点"></textarea>
             <div class="agent-chips">
               <button type="button" data-prompt="明天面试，希望自然、精神一点">面试自然</button>
               <button type="button" data-prompt="今晚约会，想要冷调氛围感">约会冷调</button>
-              <button type="button" data-prompt="口红再淡一点，腮红也弱一点">局部调整</button>
+              <button type="button" data-prompt="整体淡一点，口红再弱一些">再自然一点</button>
             </div>
-            <button id="agentSubmit" class="agent-submit" type="submit">让 Agent 帮我试妆</button>
+            <button id="agentSubmit" class="agent-submit" type="submit">生成跟妆方案</button>
           </form>
-          <div id="agentReply" class="agent-reply" aria-live="polite">
-            <span class="agent-avatar">AI</span>
-            <p>我会把你的自然语言需求转换成妆容风格、整体强度和局部参数，并直接应用到预览。</p>
-          </div>
+          <div id="agentReply" class="agent-reply" aria-live="polite"><span>AI</span><p>我会结合你的场景和本地视觉特征，生成妆容风格与各步骤强度。</p></div>
         </section>
 
         <section>
-          <div class="section-title compact"><span>04</span><div><h2>手动调整强度</h2></div></div>
-          <label class="range-row"><span>自然</span><input id="makeupIntensity" type="range" min="20" max="100" value="60" /><span>明显</span></label>
-          <button id="resetButton" class="text-button" type="button">恢复默认</button>
+          <div class="section-title"><span>03</span><div><h2>选择妆容</h2><p>也可以手动切换方案</p></div></div>
+          <div id="makeupOptions" class="makeup-grid"></div>
+          <label class="range-row"><span>自然</span><input id="makeupIntensity" type="range" min="20" max="100" value="58"/><span>明显</span></label>
         </section>
       </aside>
 
-      <section class="preview-panel panel">
-        <div class="preview-head">
-          <div><span class="status-dot"></span><strong id="statusText">等待上传照片</strong></div>
-          <span id="selectedLookBadge" class="badge">清透玫瑰</span>
+      <section class="panel mirror-panel">
+        <div class="mirror-head">
+          <div><span class="status-dot"></span><strong id="statusText">等待开启摄像头</strong></div>
+          <div class="mirror-actions"><button id="swapSideButton" class="small-button">AI 示范：左半脸</button><span id="selectedLookBadge" class="badge">清透玫瑰</span></div>
         </div>
 
-        <div id="compareStage" class="compare-stage empty">
-          <canvas id="beforeCanvas"></canvas>
-          <div id="afterLayer" class="after-layer"><canvas id="afterCanvas"></canvas></div>
-          <div id="compareDivider" class="compare-divider"><span>↔</span></div>
-          <input id="compareSlider" class="compare-slider" type="range" min="0" max="100" value="50" aria-label="拖动查看妆前妆后" />
-          <div class="compare-label before-label">妆前</div>
-          <div class="compare-label after-label">妆后</div>
-          <div id="emptyState" class="empty-state">
-            <div class="face-placeholder">✦</div>
-            <h3>从一张照片开始</h3>
-            <p>上传后将自动定位面部，并叠加眼妆、腮红与唇色。</p>
+        <div id="mirrorStage" class="mirror-stage empty">
+          <video id="cameraVideo" playsinline muted></video>
+          <canvas id="mirrorCanvas"></canvas>
+          <div class="center-line"></div>
+          <div class="half-label demo-label">AI 示范</div>
+          <div class="half-label practice-label">你来跟画</div>
+          <div id="emptyState" class="empty-state"><div class="face-placeholder">✦</div><h3>开启实时跟妆</h3><p>允许摄像头后，AI 妆效只显示在半张脸上，另一半保持真实画面供你照着练习。</p></div>
+        </div>
+
+        <div class="coach-card">
+          <div class="coach-progress"><span id="stepCounter">Step 1 / 6</span><div><i id="progressBar"></i></div></div>
+          <div class="coach-main">
+            <div><span class="mini-label">CURRENT STEP</span><h2 id="stepTitle">底妆与肤色均匀</h2><p id="stepInstruction">先观察 AI 半脸的轻薄底妆范围，在真实一侧少量多次铺开。</p></div>
+            <div class="coach-buttons"><button id="prevStepButton" class="ghost-button" type="button">上一步</button><button id="nextStepButton" class="primary-button" type="button">我画好了，下一步</button></div>
           </div>
-        </div>
-
-        <div class="preview-actions">
-          <div class="tip"><strong>演示提示</strong><span>拖动中间分割线，直观看妆前 / 妆后差异。</span></div>
-          <button id="downloadButton" type="button" disabled>导出妆后图</button>
+          <div id="stepTips" class="step-tips"></div>
         </div>
       </section>
 
       <aside class="panel info-panel">
         <div class="result-card">
-          <span class="mini-label">CURRENT LOOK</span>
-          <h2 id="lookName">清透玫瑰</h2>
-          <p id="lookNote">低饱和通勤 · 清透自然</p>
+          <span class="mini-label">CURRENT LOOK</span><h2 id="lookName">清透玫瑰</h2><p id="lookNote">低饱和通勤 · 清透自然</p>
           <div class="color-row"><span id="eyeColor"></span><span id="blushColor"></span><span id="lipColor"></span></div>
         </div>
-        <div class="feature-list">
-          <h3>Demo 已实现</h3>
-          <div><b>✓</b><span>本地照片上传与预览</span></div>
-          <div><b>✓</b><span>4 种妆容一键切换</span></div>
-          <div><b>✓</b><span>人脸关键点驱动妆效叠加</span></div>
-          <div><b>✓</b><span>妆前 / 妆后滑杆对比</span></div>
-          <div><b>✓</b><span>妆后效果导出</span></div>
-          <div><b>✓</b><span>Makeup Agent 场景推荐与多轮调整</span></div>
+        <div class="visual-card">
+          <div class="mini-label">LOCAL VISUAL PROFILE</div>
+          <div id="visualProfile"><p>开启摄像头后生成。</p></div>
         </div>
-        <div class="privacy-note"><strong>隐私优先</strong><p>当前 Demo 不上传用户照片到服务器，图像处理在浏览器端完成。</p></div>
+        <div class="feature-list"><h3>Real-time Coach</h3><div><b>✓</b><span>FaceMesh 实时面部跟踪</span></div><div><b>✓</b><span>半脸 AI 示范 / 半脸真实练习</span></div><div><b>✓</b><span>底妆、眉妆、眼妆、腮红、修容高光、唇妆分步教学</span></div><div><b>✓</b><span>Agent + 本地视觉特征联合推荐</span></div><div><b>✓</b><span>左右示范侧一键切换</span></div></div>
+        <div class="privacy-note"><strong>隐私优先</strong><p>摄像头画面与照片均留在浏览器端。Agent 只接收文字、当前妆容参数和本地计算出的几何/亮度摘要。</p></div>
       </aside>
     </section>
   </main>
