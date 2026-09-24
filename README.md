@@ -1,25 +1,28 @@
-# Colorful You — Makeup Agent Virtual Try-on Demo
+# Colorful You — AI Real-time Makeup Coach V2
 
-针对“用户难以判断妆容是否适合自己”的 Web MVP。当前版本已经形成完整演示闭环：
+Colorful You 从“虚拟试妆图片 Demo”升级为 **AI 实时跟妆助手**：不只展示最终效果，而是让用户在摄像头里看到 **半张脸的 AI 妆效示范**，另一半保持真实画面，按步骤照着完成真实妆容。
 
-**上传照片 → 用自然语言描述场景/偏好 → Makeup Agent 决策 → 自动应用妆容 → 多轮局部调整 → 妆前/妆后对比 → 导出结果**
+## 1. 核心产品闭环
 
-## 1. 最快运行
+**实时摄像头 → FaceMesh 跟踪 → 本地视觉摘要 → Makeup Agent 推荐 → 半脸分步示范 → 用户对照另一半真实脸跟画 → 下一步骤**
 
-无需安装 npm 依赖，Node.js 18+ 即可：
+与普通 P 图/滤镜的区别：目标不是替用户“生成一张化好妆的图”，而是帮助用户把推荐妆容真正画到自己脸上。
+
+## 2. 最快运行
+
+需要 Node.js 18+，不需要 npm install：
 
 ```bash
-cd "coloful you"
 node backend/server.js
 ```
 
 浏览器打开：`http://localhost:8787`
 
-此时即使没有 API Key，Makeup Agent 也会自动使用本地规则 fallback，因此 Demo 可以完整运行。
+点击 **开启摄像头** 并允许摄像头权限。localhost 可以正常使用 `getUserMedia`。
 
-## 2. 启用 OpenAI Makeup Agent
+没有 OpenAI API Key 时，Makeup Agent 会自动使用本地规则 fallback，因此完整跟妆 Demo 仍可运行。
 
-推荐通过环境变量提供 API Key，不要把 Key 写进前端或提交到 GitHub。
+## 3. 启用 OpenAI Makeup Agent
 
 macOS / Linux：
 
@@ -37,108 +40,80 @@ $env:OPENAI_MODEL="gpt-5.6-luna"
 node backend/server.js
 ```
 
-也可以参考 `.env.example`。当前项目不自动读取 `.env`，避免增加依赖；如果需要，可自行用 dotenv 或部署平台的 Secret/Environment Variables 配置。
+生产部署时请把 `OPENAI_API_KEY` 配置在部署平台 Secret / Environment Variables 中，**不要写进前端代码或提交 GitHub**。
 
-启动后访问 `http://localhost:8787/api/health`：
+## 4. V2 已实现
 
-- `makeupAgent: "openai"`：正在使用 OpenAI Agent。
-- `makeupAgent: "local-fallback"`：未配置 Key，前端会自动回退到本地 Agent。
+- **实时摄像头模式**：使用 `getUserMedia` 获取本地视频流。
+- **MediaPipe FaceMesh 实时跟踪**：约每 100ms 更新一次关键点，视频绘制保持浏览器刷新节奏。
+- **Mirror Makeup Mode**：AI 妆效只绘制在左/右半脸之一，另一半保持真实画面。
+- **示范侧切换**：一键切换 AI 示范左半脸 / 右半脸。
+- **6 步实时跟妆**：底妆、眉妆、眼妆、腮红、修容与高光、唇妆。
+- **更细妆容参数**：`foundation / brow / eye / blush / contour / highlight / lip`。
+- **Makeup Agent**：将面试、约会、通勤等自然语言需求转换成妆容方案和各区域强度。
+- **多轮调整**：可以继续说“口红淡一点”“眉毛轻一点”“修容弱一点”。
+- **本地视觉分析**：浏览器根据 FaceMesh 计算脸部纵横比、眼距比例，并根据当前 Canvas 估算画面亮度；只把结构化摘要提供给 Agent。
+- **照片备用模式**：摄像头不可用时仍可上传照片或使用示例图测试步骤。
+- **隐私设计**：摄像头画面/照片不上传后端；Agent API 只接收文字、妆容参数和本地计算出的非敏感视觉摘要。
 
-## 3. Makeup Agent 已实现什么
-
-Agent 不负责评价用户“好不好看”，而是把用户的**场景和偏好**转换成现有虚拟试妆引擎可以执行的参数：
-
-```json
-{
-  "lookId": "clean-rose",
-  "intensity": 0.5,
-  "effects": {
-    "eye": 1.0,
-    "blush": 0.85,
-    "lip": 0.7
-  },
-  "reply": "选择清透玫瑰并降低唇色与腮红，更适合自然正式的面试场景。"
-}
-```
-
-支持两类交互：
-
-- 场景推荐：`明天面试，希望自然、精神一点`、`今晚约会，想要冷调氛围感`。
-- 多轮调整：第一次生成后继续说 `口红再淡一点`、`腮红不要这么明显`、`整体再浓一点`。
-
-前端会保留当前妆容状态，局部调整只改变对应参数。
-
-## 4. 其他已实现功能
-
-- 本地上传 JPG / PNG，照片不上传 OpenAI API；API 只接收文字需求和当前妆容参数。
-- 内置示例图，一键进入演示流程。
-- 4 种妆容：清透玫瑰、拿铁柔雾、冷调梅子、蜜桃元气。
-- MediaPipe FaceMesh 眼部、双颊、唇部关键点定位。
-- FaceMesh 失败时使用基础位置估算降级。
-- Canvas 眼影、腮红、唇色叠加。
-- 整体强度 + Agent 控制的局部强度。
-- 妆前 / 妆后拖动分割线。
-- PNG 结果导出。
-- OpenAI Agent 失败/未配置时自动本地 fallback。
-
-## 5. 项目结构
+## 5. 技术架构
 
 ```text
-coloful you/
-├── index.html
-├── styles.css
-├── .env.example
-├── .gitignore
-├── src/
-│   ├── app.js          # 图片、FaceMesh、Canvas、状态与 UI
-│   ├── agent.js        # Agent 客户端 + 本地 fallback
-│   └── catalog.js      # 妆容预设
-├── backend/
-│   └── server.js       # 静态服务 + /api/agent OpenAI 代理
-├── docs/
-│   ├── learn-colorful-you.md
-│   └── my-module.md
-└── demo/
-    └── colorful-you-demo.mp4
-```
-
-## 6. Agent 架构
-
-```text
-User natural language
-       ↓
+Camera / Photo
+      ↓
+MediaPipe FaceMesh
+      ↓
+Local visual profile
+(face aspect / eye spacing / brightness)
+      ↓
 Makeup Agent
-       ↓
-{ lookId, intensity, eye, blush, lip }
-       ↓
-Virtual Makeup Engine (Canvas + FaceMesh)
-       ↓
-Before / After Preview
-       ↓
-User feedback → next Agent turn
+      ↓
+Makeup Plan
+{ look, intensity, foundation, brow, eye,
+  blush, contour, highlight, lip }
+      ↓
+Real-time Half-face AR Renderer (Canvas)
+      ↓
+Step-by-step Makeup Coach
 ```
 
-为了避免在浏览器暴露 API Key，OpenAI 请求统一通过 `backend/server.js` 的 `/api/agent` 转发。
+## 6. 实时渲染说明
 
-## 7. Demo 演示建议（45–60 秒）
+V2 仍使用 Canvas 作为浏览器端实时渲染层，但已经从旧版本的“固定椭圆叠色”升级为：
 
-1. 点击“使用内置示例图”。
-2. 在 Makeup Agent 输入：`明天面试，希望自然、精神一点`。
-3. 展示 Agent 自动切换妆容并调整强度。
-4. 再输入：`口红再淡一点，腮红也弱一点`。
-5. 强调第二轮只修改局部参数，体现 Agent 的状态与决策。
-6. 拖动妆前/妆后分割线。
-7. 点击导出结果。
-8. 说明 API 不可用时有本地 fallback，答辩演示不会中断。
+- FaceMesh 区域多边形；
+- 眉毛与嘴唇 Polygon Mask；
+- 眼妆与腮红动态渐变；
+- 修容/高光跟随关键点；
+- 半脸裁剪；
+- 实时视频跟踪。
 
-## 8. 尚未完成
+这使它从静态 P 图 Demo 转变为 **实时 AR 跟妆交互原型**。
 
-- 当前妆效是 2D Canvas 模拟，不是生成式高保真材质迁移。
-- Agent 当前使用文字场景和用户偏好，不读取用户照片内容做视觉分析。
-- 未加入粉底、眉妆、修容、高光等更细参数。
-- 未做账号、收藏、历史记录和云同步。
-- 未部署生产后端；正式部署时需要把 `OPENAI_API_KEY` 放在平台 Secret 中。
+## 7. 推荐演示方式
 
-## 9. 隐私说明
+1. 点击“开启摄像头”。
+2. 输入：`明天面试，希望自然、精神一点`。
+3. Agent 生成“清透玫瑰”等方案。
+4. 保持 AI 示范在左半脸，右半脸保持真实。
+5. 从 Step 1 底妆开始，点击“我画好了，下一步”。
+6. 依次展示眉妆、眼妆、腮红、修容高光、唇妆。
+7. 点击“AI 示范：左半脸”切换到右半脸，证明渲染不是静态贴图。
+8. 再输入：`口红淡一点，腮红也弱一点`，展示多轮调整。
 
-照片始终在浏览器端用于 FaceMesh / Canvas 处理。当前 `/api/agent` 只会发送用户输入的文字和妆容参数，不会发送照片。
+## 8. 当前边界与下一阶段
+
+V2 已完成“实时跟妆”核心闭环，但以下功能仍属于下一阶段：
+
+- **高保真材质迁移**：当前仍是实时 Canvas/AR 渲染，不是生成式皮肤材质重建。建议未来采用 Hybrid：实时 CV + WebGL/Shader，静态最终预览再调用生成式图像编辑。
+- **Face Parsing**：当前区域主要由 FaceMesh Polygon 估算；下一步可引入皮肤、眉毛、嘴唇等像素级语义分割提高边界质量。
+- **AI 完成度检测**：尚未自动判断“用户真实一侧是否已经画到目标位置/强度”。未来可加入 reference mask vs camera 的差异分析。
+- **视频跟妆**：尚未解析教程视频的步骤、区域和时间轴。V3 可实现 Tutorial Video → Step Extraction → 用户实时跟练。
+- **账号 / 收藏 / 历史 / 云同步**：暂未实现，因为目前优先验证实时跟妆 Hero Feature。
+- **生产部署**：尚未部署托管后端；部署时需将 API Key 放入 Secret。
+
+## 9. 项目定位
+
+**Colorful You — AI Real-time Makeup Coach**
+
+> 不仅告诉你这个妆适不适合你，还实时教你把它画出来。
